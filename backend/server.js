@@ -13,6 +13,22 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Welcome / Status Root Route
+app.get('/', (req, res) => {
+  res.json({
+    message: '🎨 Anmol Art Gallery Backend API is Online & Running Successfully!',
+    status: 'online',
+    mysql: isDbConnected(),
+    endpoints: {
+      health: '/api/health',
+      settings: '/api/settings',
+      artworks: '/api/artworks',
+      orders: '/api/orders',
+      reviews: '/api/reviews'
+    }
+  });
+});
+
 // Middleware to ensure DB connection is ready (auto-retries if MySQL was started late)
 app.use(async (req, res, next) => {
   req.pool = await ensureDbConnection();
