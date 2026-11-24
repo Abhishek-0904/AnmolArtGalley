@@ -3,9 +3,17 @@
   "version": "1.0.0",
   "description": "Anmol Art Gallery - Fullstack Handmade Artwork & Custom Portrait Studio with MySQL",
   "type": "module",
+  "main": "backend/server.js",
   "scripts": {
+    "start": "node backend/server.js",
+    "build": "npm install",
     "server": "node backend/server.js",
-    "client": "npm --prefix Front-end run dev",
-    "build": "npm --prefix Front-end run build"
+    "client": "npm --prefix Front-end run dev"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mysql2": "^3.9.7"
   }
 }
