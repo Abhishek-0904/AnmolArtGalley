@@ -1,0 +1,106 @@
+/* Custom styling for Anoml Art Gallery */
+
+@layer utilities {
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #FAF7F2;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #D1CDC7;
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #A49E97;
+    }
+}
+
+/* Subtle paper texture background feel */
+body {
+    background-color: #FAF7F2;
+    background-image: radial-gradient(#E8E5DF 0.75px, transparent 0.75px);
+    background-size: 20px 20px;
+}
+
+/* Smooth transitions */
+.transition-smooth {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom card shadow on hover */
+.art-card {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.art-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 30px -10px rgba(42, 39, 36, 0.12);
+}
+
+/* Radio button active style adjustments */
+.custom-radio-card {
+    user-select: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+
+.custom-radio-card:active {
+    transform: scale(0.98);
+}
+
+/* Image zoom styling */
+.img-zoom-container {
+    overflow: hidden;
+}
+
+.img-zoom-container img {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.img-zoom-container:hover img {
+    transform: scale(1.07);
+}
+
+/* Toast message animation */
+.toast-visible {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+}
+
+/* Details summary remove default marker */
+details summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Hide scrollbar for category pills on mobile */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Fade in animation for mobile dropdown */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.2s ease-out forwards;
+}

@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Anmol Art Gallery</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#FAF7F2',
+                        charcoal: {
+                            900: '#1A1816',
+                            800: '#2A2724',
+                            700: '#3D3935',
+                            500: '#6B6560',
+                            300: '#A49E97',
+                            100: '#E8E5DF'
+                        },
+                        amberart: {
+                            DEFAULT: '#B87333',
+                            light: '#D48C46',
+                            dark: '#8C5220'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body
+    class="bg-cream text-charcoal-900 font-sans antialiased selection:bg-charcoal-900 selection:text-white min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Top Announcement Bar -->
+    <div
+        class="bg-charcoal-900 text-cream text-[11px] sm:text-xs py-2 px-3 sm:px-4 text-center tracking-wide flex justify-center items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+        <span class="truncate sm:overflow-visible">Taking Custom Portrait Orders | <strong>Free Safe Wooden
+                Packing</strong></span>
+    </div>
+
+    <!-- Navigation Bar -->
+    <header
+        class="sticky top-0 z-40 bg-cream/95 backdrop-blur-md border-b border-charcoal-100 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="#" class="flex items-center gap-2.5 sm:gap-3 group">
+                <div
+                    class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-charcoal-900 flex items-center justify-center font-serif text-lg sm:text-xl font-bold bg-charcoal-900 text-cream group-hover:bg-amberart transition">
+                    A
+                </div>
+                <div>
+                    <span class="font-serif text-xl sm:text-2xl font-bold tracking-tight block leading-none">Anmol Art
+                        Gallery</span>
+                    <span
+                        class="text-[9px] sm:text-[10px] tracking-widest text-charcoal-500 uppercase font-semibold">Sketch
+                        Studio</span>
+                </div>
+            </a>
+
+            <!-- Desktop Menu -->
+            <nav class="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-charcoal-700">
+                <a href="#artworks" class="hover:text-amberart transition">Ready Sketches</a>
+                <a href="#custom-order" class="hover:text-amberart transition flex items-center gap-1.5">
+                    <span>Order Custom Portrait</span>
+                    <span
+                        class="bg-amberart text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase">Popular</span>
+                </a>
+                <a href="#about" class="hover:text-amberart transition">About Artist</a>
+                <a href="#reviews" class="hover:text-amberart transition">Reviews</a>
+            </nav>
+
+            <!-- Actions (WhatsApp & Cart) -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="https://www.instagram.com/anmolart_gallery/"
+                    target="_blank"
+                    rel="noreferrer"
+                    class="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 border border-pink-200 text-pink-700 bg-pink-50 hover:bg-pink-100 rounded-full transition shadow-xs"
+                    title="Follow on Instagram @anmolart_gallery">
+                    <i data-lucide="instagram" class="w-3.5 h-3.5"></i>
+                    <span>Instagram</span>
+                </a>
+
+                <a href="https://wa.me/919876543210?text=Hello%20Anmol%20Art!%20I%20want%20to%20inquire%20about%20a%20sketch."
+                    target="_blank"
+                    class="hidden lg:inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 border border-emerald-600/30 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-full transition">
+                    <i data-lucide="message-circle" class="w-4 h-4 text-emerald-600"></i>
+                    <span>Chat with Artist</span>
+                </a>
+
+                <!-- Cart Button -->
+                <button id="cartBtn"
+                    class="relative p-2 sm:p-2.5 rounded-full border border-charcoal-200 hover:border-charcoal-900 hover:bg-charcoal-900 hover:text-white transition duration-200"
+                    aria-label="Open cart">
+                    <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+                    <span id="cartCount"
+                        class="absolute -top-1 -right-1 bg-amberart text-white text-[10px] sm:text-[11px] font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center">0</span>
+                </button>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn"
+                    class="md:hidden p-2 rounded-lg text-charcoal-700 hover:bg-charcoal-100 transition"
+                    aria-label="Toggle menu">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Nav Dropdown -->
+        <div id="mobileMenu"
+            class="hidden md:hidden bg-cream border-b border-charcoal-200 px-5 py-4 space-y-3 text-sm animate-fadeIn">
+            <a href="#artworks" class="block py-1 hover:text-amberart font-medium">🖼️ Ready Sketches</a>
+            <a href="#custom-order" class="block py-1 text-amberart font-bold flex items-center justify-between">
+                <span>✏️ Order Custom Portrait (Photo to Sketch)</span>
+                <span class="text-[10px] bg-amberart text-white px-1.5 py-0.5 rounded">Hot</span>
+            </a>
+            <a href="#about" class="block py-1 hover:text-amberart">🎨 About Artist</a>
+            <a href="#reviews" class="block py-1 hover:text-amberart">⭐ Reviews</a>
+            <div class="pt-2">
+                <a href="https://wa.me/919876543210" target="_blank"
+                    class="w-full flex justify-center items-center gap-2 py-2.5 bg-emerald-600 text-white rounded-xl font-medium text-xs shadow">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                    Chat on WhatsApp
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+
+        <!-- Hero Section -->
+        <section
+            class="relative pt-8 pb-12 sm:pt-14 sm:pb-20 md:pt-20 md:pb-24 border-b border-charcoal-100 overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+                    <!-- Left Copy -->
+                    <div class="lg:col-span-7 space-y-4 sm:space-y-6 text-center lg:text-left">
+                        <div
+                            class="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-charcoal-100 text-charcoal-700 text-xs font-medium">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amberart"></i>
+                            <span>100% Hand-Drawn with Pencil & Charcoal</span>
+                        </div>
+
+                        <h1
+                            class="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-charcoal-900 leading-[1.2] sm:leading-[1.15]">
+                            Turning precious memories into <span class="italic text-amberart">timeless hand-drawn
+                                art.</span>
+                        </h1>
+
+                        <p
+                            class="text-charcoal-500 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto lg:mx-0 leading-relaxed font-light">
+                            Discover authentic original sketches ready to hang, or turn your favorite personal photos
+                            into hyper-realistic portraits. Framed carefully and delivered safely across India.
+                        </p>
+
+                        <!-- CTA Buttons -->
+                        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start pt-2">
+                            <a href="#custom-order"
+                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3.5 bg-charcoal-900 text-white rounded-full text-sm font-semibold hover:bg-amberart hover:shadow-lg transition active:scale-95">
+                                <span>Order Custom Portrait</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </a>
+                            <a href="#artworks"
+                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-7 py-3.5 border border-charcoal-300 text-charcoal-900 rounded-full text-sm font-semibold hover:border-charcoal-900 hover:bg-white transition active:scale-95">
+                                <i data-lucide="palette" class="w-4 h-4 text-charcoal-500"></i>
+                                <span>Browse Available Art</span>
+                            </a>
+                        </div>
+
+                        <!-- Trust Features -->
+                        <div
+                            class="pt-6 border-t border-charcoal-200/60 grid grid-cols-3 gap-2 sm:gap-4 text-center sm:text-left">
+                            <div class="p-2 bg-white/60 sm:bg-transparent rounded-xl">
+                                <p class="text-lg sm:text-2xl font-bold font-serif text-charcoal-900">450+</p>
+                                <p class="text-[10px] sm:text-xs text-charcoal-500">Delivered</p>
+                            </div>
+                            <div class="p-2 bg-white/60 sm:bg-transparent rounded-xl">
+                                <p class="text-lg sm:text-2xl font-bold font-serif text-charcoal-900">4.9 ★</p>
+                                <p class="text-[10px] sm:text-xs text-charcoal-500">Rating</p>
+                            </div>
+                            <div class="p-2 bg-white/60 sm:bg-transparent rounded-xl">
+                                <p class="text-lg sm:text-2xl font-bold font-serif text-charcoal-900">Zero Damage</p>
+                                <p class="text-[10px] sm:text-xs text-charcoal-500">Safe Packing</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Hero Visual Grid -->
+                    <div class="lg:col-span-5 relative mt-4 lg:mt-0">
+                        <div class="relative mx-auto max-w-xs sm:max-w-md">
+                            <div
+                                class="relative bg-white p-2.5 sm:p-3 rounded-2xl shadow-xl border border-charcoal-200/80">
+                                <div class="overflow-hidden rounded-xl aspect-[4/5] bg-charcoal-100 relative group">
+                                    <img src="hero-main.jpg"
+                                        alt="Divine Radha Krishna Handcrafted Masterpiece"
+                                        class="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500">
+                                    <div
+                                        class="absolute bottom-2.5 left-2.5 right-2.5 bg-white/95 backdrop-blur-md px-3 py-2.5 rounded-xl border border-white/60 flex items-center justify-between shadow-sm">
+                                        <div>
+                                            <p class="text-xs font-semibold text-charcoal-900">Divine Radha Krishna
+                                            </p>
+                                            <p class="text-[10px] text-charcoal-500">Handcrafted Masterpiece • A3 Framed</p>
+                                        </div>
+                                        <button onclick="openWallModal('art-1')"
+                                            class="px-2.5 py-1.5 bg-charcoal-900 text-white hover:bg-amberart rounded-lg text-[11px] font-bold shadow flex items-center gap-1 transition">
+                                            <span>🖼️ View on Wall</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Ready to Buy Artworks (E-Commerce Store) -->
+        <section id="artworks" class="py-12 sm:py-16 md:py-20 border-b border-charcoal-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 sm:mb-8 gap-4">
+                    <div>
+                        <span class="text-xs font-semibold tracking-wider text-amberart uppercase">Original
+                            Artworks</span>
+                        <h2 class="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal-900 mt-1">
+                            Available Ready Sketches</h2>
+                        <p class="text-charcoal-500 text-xs sm:text-sm mt-1">Single-piece original handmade sketches
+                            ready for direct delivery.</p>
+                    </div>
+
+                    <!-- Category Filter Tabs: Horizontal scroll on mobile -->
+                    <div id="filterContainer"
+                        class="flex gap-2 overflow-x-auto pb-2 scrollbar-none sm:flex-wrap text-xs font-medium">
+                        <button
+                            class="filter-btn active-filter whitespace-nowrap px-4 py-2 rounded-full border border-charcoal-900 bg-charcoal-900 text-white transition flex-shrink-0"
+                            data-category="all">
+                            ALL
+                        </button>
+                        <button
+                            class="filter-btn whitespace-nowrap px-4 py-2 rounded-full border border-charcoal-200 bg-white text-charcoal-700 hover:border-charcoal-900 transition flex-shrink-0"
+                            data-category="sketching">
+                            Sketching
+                        </button>
+                        <button
+                            class="filter-btn whitespace-nowrap px-4 py-2 rounded-full border border-charcoal-200 bg-white text-charcoal-700 hover:border-charcoal-900 transition flex-shrink-0"
+                            data-category="painting">
+                            Painting
+                        </button>
+                        <button
+                            class="filter-btn whitespace-nowrap px-4 py-2 rounded-full border border-charcoal-200 bg-white text-charcoal-700 hover:border-charcoal-900 transition flex-shrink-0"
+                            data-category="3d">
+                            3D
+                        </button>
+                        <button
+                            class="filter-btn whitespace-nowrap px-4 py-2 rounded-full border border-charcoal-200 bg-white text-charcoal-700 hover:border-charcoal-900 transition flex-shrink-0"
+                            data-category="custom">
+                            Custom
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div id="artworksGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+                    <!-- Cards injected by app.js -->
+                </div>
+
+                <!-- Empty state if no item matches filter -->
+                <div id="emptyFilterNotice" class="hidden py-16 text-center text-charcoal-500">
+                    <i data-lucide="image-off" class="w-12 h-12 mx-auto mb-3 text-charcoal-300"></i>
+                    <p class="text-base font-semibold">Koi sketch nahi mila is category me.</p>
+                    <p class="text-xs">Kripya koi doosra filter select karein ya custom order banwayein.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section: Custom Order Interactive Studio -->
+        <section id="custom-order" class="py-12 sm:py-16 md:py-24 bg-white border-b border-charcoal-100">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                <div class="text-center max-w-2xl mx-auto mb-8 sm:mb-12">
+                    <span
+                        class="inline-block px-3 py-1 rounded-full bg-amberart/10 text-amberart text-xs font-bold uppercase tracking-wider mb-2">Personalized
+                        Commission</span>
+                    <h2 class="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal-900">Get a Custom
+                        Portrait Made From Your Photo</h2>
+                    <p class="text-charcoal-500 text-xs sm:text-sm mt-1 sm:mt-2">Apni kisi bhi photo (Self, Couple,
+                        Family, Pet) ka realistic pencil ya charcoal sketch banwayein.</p>
+                </div>
+
+                <!-- Interactive Custom Order Configurator -->
+                <div
+                    class="bg-cream rounded-2xl sm:rounded-3xl p-4 sm:p-8 lg:p-10 border border-charcoal-200 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
+
+                    <!-- Form Controls -->
+                    <div class="lg:col-span-7 space-y-5 sm:space-y-6">
+
+                        <!-- Step 1: Select Medium -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-2">
+                                1. Select Drawing Style / Medium
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                                <label
+                                    class="custom-radio-card cursor-pointer border border-charcoal-200 bg-white p-3 rounded-xl flex flex-col items-center text-center hover:border-charcoal-900 transition has-[:checked]:border-charcoal-900 has-[:checked]:bg-charcoal-900 has-[:checked]:text-white">
+                                    <input type="radio" name="medium" value="pencil" checked
+                                        class="hidden custom-input">
+                                    <i data-lucide="pencil" class="w-5 h-5 mb-1.5 text-amberart"></i>
+                                    <span class="text-xs font-bold">Graphite Pencil</span>
+                                    <span class="text-[10px] opacity-75">Classic Smooth</span>
+                                </label>
+
+                                <label
+                                    class="custom-radio-card cursor-pointer border border-charcoal-200 bg-white p-3 rounded-xl flex flex-col items-center text-center hover:border-charcoal-900 transition has-[:checked]:border-charcoal-900 has-[:checked]:bg-charcoal-900 has-[:checked]:text-white">
+                                    <input type="radio" name="medium" value="charcoal" class="hidden custom-input">
+                                    <i data-lucide="feather" class="w-5 h-5 mb-1.5 text-amberart"></i>
+                                    <span class="text-xs font-bold">Dark Charcoal</span>
+                                    <span class="text-[10px] opacity-75">+₹200 Deep Shadows</span>
+                                </label>
+
+                                <label
+                                    class="custom-radio-card cursor-pointer border border-charcoal-200 bg-white p-3 rounded-xl flex flex-col items-center text-center hover:border-charcoal-900 transition has-[:checked]:border-charcoal-900 has-[:checked]:bg-charcoal-900 has-[:checked]:text-white">
+                                    <input type="radio" name="medium" value="color" class="hidden custom-input">
+                                    <i data-lucide="palette" class="w-5 h-5 mb-1.5 text-amberart"></i>
+                                    <span class="text-xs font-bold">Color Pencil</span>
+                                    <span class="text-[10px] opacity-75">+₹500 Vibrant Colors</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Paper Size -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-2">
+                                2. Select Paper Size
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                                <label
+                                    class="custom-radio-card cursor-pointer border border-charcoal-200 bg-white p-3.5 rounded-xl hover:border-charcoal-900 transition has-[:checked]:border-charcoal-900 has-[:checked]:bg-charcoal-900 has-[:checked]:text-white">
+                                    <input type="radio" name="size" value="A4" checked class="hidden custom-input">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-bold text-sm">A4 Size</span>
+                                        <span class="text-[10px] font-semibold text-amberart">Standard</span>
+                                    </div>
+                                    <p class="text-[10px] opacity-75">8.3 × 11.7 in (1 face)</p>
+                                </label>
+
+                                <label
+                                    class="custom-radio-card cursor-pointer border border-charcoal-200 bg-white p-3.5 rounded-xl hover:border-charcoal-900 transition has-[:checked]:border-charcoal-900 has-[:checked]:bg-charcoal-900 has-[:checked]:text-white">
+                                    <input type="radio" name="size" value="A3" class="hidden custom-input">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-bold text-sm">A3 Size</span>
+                                        <span
+                                            class="text-[9px] bg-amberart text-white px-1.5 rounded uppercase font-bold">Best</span>
+                                    </div>
+                                    <p class="text-[10px] opacity-75">11.7 × 16.5 in (Couple)</p>
+                                </label>
+
+                                <label
+                                    class="custom-radio-card cursor-pointer border border-charcoal-200 bg-white p-3.5 rounded-xl hover:border-charcoal-900 transition has-[:checked]:border-charcoal-900 has-[:checked]:bg-charcoal-900 has-[:checked]:text-white">
+                                    <input type="radio" name="size" value="A2" class="hidden custom-input">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-bold text-sm">A2 Size</span>
+                                        <span class="text-[10px] font-semibold text-amberart">Large</span>
+                                    </div>
+                                    <p class="text-[10px] opacity-75">16.5 × 23.4 in (Grand)</p>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Faces & Frame -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-1">
+                                    3. Number of Faces in Photo
+                                </label>
+                                <select id="customFaces"
+                                    class="w-full bg-white border border-charcoal-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-charcoal-900">
+                                    <option value="1">1 Person / Single Portrait</option>
+                                    <option value="2">2 Persons / Couple (+₹600)</option>
+                                    <option value="3">3 Persons / Family (+₹1,100)</option>
+                                    <option value="4">4+ Persons / Group (+₹1,600)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-1">
+                                    4. Premium Wooden Framing?
+                                </label>
+                                <select id="customFrame"
+                                    class="w-full bg-white border border-charcoal-200 rounded-xl px-3 py-2.5 text-xs sm:text-sm focus:outline-none focus:border-charcoal-900">
+                                    <option value="none">No Frame (Hard Roll Tube)</option>
+                                    <option value="black">Matte Black Glass Frame (+₹450)</option>
+                                    <option value="brown">Teak Wood Frame (+₹550)</option>
+                                    <option value="white">Minimal White Frame (+₹450)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Photo Upload -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-charcoal-700 mb-1">
+                                5. Upload Reference Photo (Optional here, can send on WhatsApp)
+                            </label>
+                            <div id="dropZone"
+                                class="border-2 border-dashed border-charcoal-300 rounded-2xl p-4 sm:p-5 text-center bg-white hover:border-amberart transition cursor-pointer relative">
+                                <input type="file" id="photoUpload" accept="image/*"
+                                    class="absolute inset-0 opacity-0 cursor-pointer">
+
+                                <div id="uploadPrompt" class="space-y-1">
+                                    <i data-lucide="upload-cloud" class="w-7 h-7 mx-auto text-charcoal-400"></i>
+                                    <p class="text-xs font-semibold text-charcoal-800">Tap to select photo from mobile /
+                                        PC</p>
+                                    <p class="text-[10px] text-charcoal-500">JPG, PNG supported.</p>
+                                </div>
+
+                                <div id="uploadPreview" class="hidden flex items-center justify-center gap-3">
+                                    <img id="previewImg" src="" alt="Uploaded photo"
+                                        class="w-14 h-14 rounded-lg object-cover border border-charcoal-200">
+                                    <div class="text-left">
+                                        <p id="fileName"
+                                            class="text-xs font-bold text-charcoal-900 truncate max-w-[160px]"></p>
+                                        <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                                            <i data-lucide="check" class="w-3 h-3"></i> Attached
+                                        </p>
+                                    </div>
+                                    <button type="button" id="removePhotoBtn"
+                                        class="p-1 text-charcoal-400 hover:text-red-600">
+                                        <i data-lucide="x" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right: Live Summary Sticky Card -->
+                    <div
+                        class="lg:col-span-5 bg-white p-5 sm:p-7 rounded-2xl border border-charcoal-200/90 shadow-md space-y-5 lg:sticky lg:top-28 w-full">
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider font-bold text-amberart">Instant
+                                Estimate</span>
+                            <h3 class="font-serif text-xl sm:text-2xl font-bold text-charcoal-900">Order Summary</h3>
+                        </div>
+
+                        <!-- Breakdown -->
+                        <div class="space-y-2 text-xs border-b border-charcoal-100 pb-4 text-charcoal-600">
+                            <div class="flex justify-between items-center">
+                                <span>Style:</span>
+                                <span id="summaryMedium" class="font-bold text-charcoal-900">Graphite Pencil</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Paper Size:</span>
+                                <span id="summarySize" class="font-bold text-charcoal-900">A4 (8.3 x 11.7 in)</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Number of Faces:</span>
+                                <span id="summaryFaces" class="font-bold text-charcoal-900">1 Person</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Framing:</span>
+                                <span id="summaryFrame" class="font-bold text-charcoal-900">No Frame (Roll Tube)</span>
+                            </div>
+                        </div>
+
+                        <!-- Total Price -->
+                        <div class="flex items-baseline justify-between">
+                            <div>
+                                <span class="text-xs text-charcoal-500 block">Total Amount</span>
+                                <span class="text-[10px] text-emerald-600 font-semibold">Includes Free Safe
+                                    Packing</span>
+                            </div>
+                            <div class="text-right">
+                                <span id="customTotalPrice"
+                                    class="font-serif text-2xl sm:text-3xl font-bold text-charcoal-900">₹1,499</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="space-y-2 pt-1">
+                            <button id="customWhatsAppBtn"
+                                class="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow transition active:scale-98">
+                                <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                <span>Order on WhatsApp (Fastest)</span>
+                            </button>
+
+                            <button id="addCustomToCartBtn"
+                                class="w-full flex items-center justify-center gap-2 py-3 px-4 border border-charcoal-900 text-charcoal-900 hover:bg-charcoal-900 hover:text-white rounded-xl text-xs font-semibold transition active:scale-98">
+                                <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                                <span>Add to Cart & Checkout Here</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section: Artist Story -->
+        <section id="about" class="py-12 sm:py-16 md:py-20 border-b border-charcoal-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+                    <div class="lg:col-span-5">
+                        <div
+                            class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-charcoal-200 aspect-[4/5] max-w-sm mx-auto shadow-md">
+                            <img src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80"
+                                alt="Artist Working in Studio" class="w-full h-full object-cover">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-t from-charcoal-900/90 via-transparent to-transparent flex items-end p-5">
+                                <div class="text-white">
+                                    <p class="font-serif text-xl sm:text-2xl font-bold">Rohan Sharma</p>
+                                    <p class="text-[11px] text-charcoal-300">Lead Fine Artist & Charcoal Specialist (8+
+                                        Yrs Exp.)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-7 space-y-4 sm:space-y-6 text-center lg:text-left">
+                        <span class="text-xs font-semibold tracking-wider text-amberart uppercase">Behind The
+                            Artwork</span>
+                        <h2
+                            class="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-charcoal-900 leading-snug">
+                            "Har sketch me ek aisi rooh hoti hai jo digital print me kabhi nahi aa sakti."
+                        </h2>
+                        <p class="text-charcoal-600 text-xs sm:text-sm leading-relaxed">
+                            Main pichle 8 saalon se professional charcoal & graphite portrait artist hoon. Mera har
+                            artwork 300 GSM Fabriano acid-free paper par premium pencils se banaya jata hai.
+                        </p>
+
+                        <div
+                            class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 text-xs font-semibold text-charcoal-800 text-left">
+                            <div
+                                class="flex items-center gap-2 bg-white/70 p-2.5 rounded-xl border border-charcoal-200">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                <span>300 GSM Archival Acid-Free Paper</span>
+                            </div>
+                            <div
+                                class="flex items-center gap-2 bg-white/70 p-2.5 rounded-xl border border-charcoal-200">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                <span>Smudge-Proof Archival Fixative</span>
+                            </div>
+                            <div
+                                class="flex items-center gap-2 bg-white/70 p-2.5 rounded-xl border border-charcoal-200">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                <span>Preview sent before dispatch</span>
+                            </div>
+                            <div
+                                class="flex items-center gap-2 bg-white/70 p-2.5 rounded-xl border border-charcoal-200">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                                <span>Signed Authenticity Certificate</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Customer Reviews -->
+        <section id="reviews" class="py-12 sm:py-16 bg-white border-b border-charcoal-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                <div class="text-center max-w-xl mx-auto mb-8 sm:mb-12">
+                    <span class="text-xs font-semibold tracking-wider text-amberart uppercase">Happy Customers</span>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-charcoal-900 mt-1">What Art Lovers Say
+                    </h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                    <div
+                        class="bg-cream p-5 sm:p-6 rounded-2xl border border-charcoal-200/70 flex flex-col justify-between">
+                        <div>
+                            <div class="text-amber-500 mb-2 text-xs">★★★★★</div>
+                            <p class="text-xs sm:text-sm text-charcoal-700 leading-relaxed italic">
+                                "Parents ki 25th anniversary ke liye portrait sketch karwaya tha. Mummy ro padi dekhkar!
+                                Realistic details ekdum perfect the."
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-charcoal-200">
+                            <p class="text-xs font-bold text-charcoal-900">Pooja Sharma</p>
+                            <p class="text-[10px] text-charcoal-500">Ordered A3 Couple Portrait • Delhi</p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-cream p-5 sm:p-6 rounded-2xl border border-charcoal-200/70 flex flex-col justify-between">
+                        <div>
+                            <div class="text-amber-500 mb-2 text-xs">★★★★★</div>
+                            <p class="text-xs sm:text-sm text-charcoal-700 leading-relaxed italic">
+                                "Charcoal Lion sketch order kiya tha. Packaging bomb-proof thi, wooden box me glass
+                                bilkul safe pahuncha."
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-charcoal-200">
+                            <p class="text-xs font-bold text-charcoal-900">Amit Kulkarni</p>
+                            <p class="text-[10px] text-charcoal-500">Original Artwork • Mumbai</p>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-cream p-5 sm:p-6 rounded-2xl border border-charcoal-200/70 flex flex-col justify-between">
+                        <div>
+                            <div class="text-amber-500 mb-2 text-xs">★★★★★</div>
+                            <p class="text-xs sm:text-sm text-charcoal-700 leading-relaxed italic">
+                                "WhatsApp pe order karna itna simple tha! Photo send ki aur 4 din me draft ready ho
+                                gaya. Best handmade gift ever!"
+                            </p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-charcoal-200">
+                            <p class="text-xs font-bold text-charcoal-900">Vikram Nair</p>
+                            <p class="text-[10px] text-charcoal-500">Custom Pet Portrait • Bangalore</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-charcoal-900 text-cream pt-10 pb-20 md:pb-8 border-t border-charcoal-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:text-left">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-charcoal-800">
+                <div class="md:col-span-6 space-y-2">
+                    <span class="font-serif text-2xl font-bold">Anmol Art Gallery</span>
+                    <p class="text-xs text-charcoal-300 max-w-sm mx-auto sm:mx-0">
+                        Handmade pencil & charcoal artwork. Giving your memories artistic immortality.
+                    </p>
+                </div>
+                <div class="md:col-span-6 text-center sm:text-right space-y-1 text-xs text-charcoal-400">
+                    <p>WhatsApp: +91 6353569913</p>
+                    <p>Instagram: <a href="https://www.instagram.com/anmolart_gallery/" target="_blank" rel="noreferrer" class="text-pink-400 hover:underline font-semibold">@anmolart_gallery ↗</a></p>
+                    <p>Pan-India Safe Courier Available 🇮🇳</p>
+                </div>
+            </div>
+            <p class="pt-4 text-xs text-charcoal-500 text-center">© 2026 Anmol Art Gallery. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- ============================================== -->
+    <!-- FEATURE 2: "VIEW ON WALL" LIVING ROOM PREVIEW MODAL -->
+    <!-- ============================================== -->
+    <div id="wallModal"
+        class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-6 bg-charcoal-900/85 backdrop-blur-md animate-fadeIn">
+        <div
+            class="bg-cream rounded-3xl max-w-4xl w-full overflow-hidden shadow-2xl border border-charcoal-200 flex flex-col max-h-[95vh]">
+            <!-- Header -->
+            <div class="p-4 sm:p-5 border-b border-charcoal-200 bg-white flex justify-between items-center">
+                <div>
+                    <span class="text-[10px] uppercase font-bold text-amberart tracking-wider">Living Room
+                        Simulator</span>
+                    <h3 id="wallModalTitle" class="font-serif text-lg sm:text-xl font-bold text-charcoal-900">
+                        Preview on Wall
+                    </h3>
+                </div>
+                <button onclick="closeWallModal()"
+                    class="w-8 h-8 rounded-full bg-charcoal-900 text-white flex items-center justify-center hover:bg-amberart transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Wall Viewport -->
+            <div class="relative flex-1 min-h-[380px] sm:min-h-[500px] flex items-center justify-center p-6 overflow-hidden"
+                style="background-image: url('wall-room.jpg'); background-size: cover; background-position: center bottom; background-color: #dbe7ee;">
+
+                <!-- Hanging Framed Artwork System -->
+                <div class="relative flex flex-col items-center" style="margin-top: -45px;">
+                    <!-- Nail head on wall -->
+                    <div style="width: 14px; height: 10px; border-radius: 50% 50% 40% 40%; background: radial-gradient(circle at 40% 35%, #d4c4a0, #7a6040); box-shadow: 0 2px 5px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.4); z-index: 10; position: relative;"></div>
+
+                    <!-- Wire going down from nail -->
+                    <div style="position: relative; width: 80px; height: 28px; margin-top: -1px;">
+                        <div style="position: absolute; left: 50%; top: 0; width: 1.5px; height: 32px; background: linear-gradient(to bottom, #a89060, #c8aa78); transform-origin: top center; transform: rotate(-22deg); opacity: 0.85;"></div>
+                        <div style="position: absolute; left: 50%; top: 0; width: 1.5px; height: 32px; background: linear-gradient(to bottom, #a89060, #c8aa78); transform-origin: top center; transform: rotate(22deg); opacity: 0.85;"></div>
+                    </div>
+
+                    <!-- Hanging Framed Artwork -->
+                    <div id="wallArtFrameContainer" class="w-56 sm:w-72 relative transition-all duration-300 ease-out"
+                        style="box-shadow: 0 28px 60px rgba(0,0,0,0.45), 0 10px 24px rgba(0,0,0,0.25), 4px 8px 18px rgba(0,0,0,0.18); filter: drop-shadow(0 16px 20px rgba(0,0,0,0.30));">
+                        <div id="wallFrameBorder"
+                            class="p-2.5 sm:p-3 transition-colors duration-300"
+                            style="background: linear-gradient(145deg, #c8824a 0%, #7a4820 30%, #a86030 60%, #6b3a18 100%); box-shadow: inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.35);">
+                            <div id="wallMatting" class="p-2 sm:p-3 bg-[#f8f5ef] shadow-inner">
+                                <img id="wallArtworkImg" src="" alt="Wall Artwork" class="w-full h-auto object-cover block">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floor shadow under frame -->
+                    <div id="wallFloorShadow" style="width: 200px; height: 14px; border-radius: 50%; background: rgba(0,0,0,0.22); filter: blur(10px); margin-top: 18px; transition: all 0.35s ease;"></div>
+                </div>
+
+                <div id="wallDimensionsBadge"
+                    class="absolute top-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full text-xs font-bold text-charcoal-900 shadow-md border border-charcoal-200">
+                    📐 Size: A3 (11.7×16.5 in)
+                </div>
+                    📐 A3 Dimensions (11.7x16.5 in)
+                </div>
+            </div>
+
+            <!-- Toolbar Controls -->
+            <div
+                class="p-4 sm:p-5 bg-white border-t border-charcoal-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <!-- Frame Selectors -->
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <span class="text-xs font-bold text-charcoal-600">Frame:</span>
+                    <div class="flex gap-1.5 flex-1">
+                        <button onclick="setWallFrame('teak')"
+                            class="wall-frame-btn active-frame px-3 py-1.5 rounded-xl text-xs font-semibold border border-charcoal-900 bg-charcoal-900 text-white flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#8B5A2B] inline-block border border-white"></span>
+                            <span class="hidden sm:inline">Teak Wood</span>
+                        </button>
+                        <button onclick="setWallFrame('black')"
+                            class="wall-frame-btn px-3 py-1.5 rounded-xl text-xs font-semibold border border-charcoal-200 bg-cream text-charcoal-700 flex items-center gap-1.5 hover:border-charcoal-900">
+                            <span class="w-2.5 h-2.5 rounded-full bg-[#1A1816] inline-block"></span>
+                            <span class="hidden sm:inline">Matte Black</span>
+                        </button>
+                        <button onclick="setWallFrame('white')"
+                            class="wall-frame-btn px-3 py-1.5 rounded-xl text-xs font-semibold border border-charcoal-200 bg-cream text-charcoal-700 flex items-center gap-1.5 hover:border-charcoal-900">
+                            <span
+                                class="w-2.5 h-2.5 rounded-full bg-white border border-charcoal-300 inline-block"></span>
+                            <span class="hidden sm:inline">Minimal White</span>
+                        </button>
+                        <button onclick="setWallFrame('none')"
+                            class="wall-frame-btn px-3 py-1.5 rounded-xl text-xs font-semibold border border-charcoal-200 bg-cream text-charcoal-700 flex items-center gap-1.5 hover:border-charcoal-900">
+                            <span>No Frame</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Size & Add to Cart -->
+                <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <div
+                        class="flex items-center gap-1 border border-charcoal-200 rounded-xl p-0.5 bg-cream text-xs font-bold">
+                        <button onclick="setWallScale('A4')"
+                            class="wall-scale-btn px-2.5 py-1 rounded-lg text-charcoal-600">A4</button>
+                        <button onclick="setWallScale('A3')"
+                            class="wall-scale-btn active-scale px-2.5 py-1 rounded-lg bg-charcoal-900 text-white">A3</button>
+                        <button onclick="setWallScale('A2')"
+                            class="wall-scale-btn px-2.5 py-1 rounded-lg text-charcoal-600">A2</button>
+                    </div>
+
+                    <button id="wallAddToCartBtn"
+                        class="px-5 py-2.5 bg-amberart hover:bg-amberart-dark text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-1.5">
+                        <span>Add to Cart</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- SLIDE-OVER CART DRAWER -->
+    <!-- ============================================== -->
+    <div id="cartDrawer" class="fixed inset-0 z-50 overflow-hidden pointer-events-none transition-all duration-300">
+        <div id="cartBackdrop"
+            class="absolute inset-0 bg-charcoal-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+        </div>
+
+        <div class="fixed inset-y-0 right-0 max-w-full flex pl-6 sm:pl-10">
+            <div id="cartPanel"
+                class="w-screen max-w-full sm:max-w-md bg-cream border-l border-charcoal-200 shadow-2xl flex flex-col transform translate-x-full transition duration-300 ease-in-out pointer-events-auto">
+
+                <!-- Drawer Header -->
+                <div class="p-4 sm:p-5 border-b border-charcoal-200 bg-white flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="shopping-bag" class="w-5 h-5 text-amberart"></i>
+                        <h2 class="font-serif text-lg sm:text-xl font-bold text-charcoal-900">Your Art Cart</h2>
+                        <span id="cartDrawerCount" class="text-xs bg-charcoal-100 px-2 py-0.5 rounded-full font-bold">0
+                            items</span>
+                    </div>
+                    <button id="closeCartBtn"
+                        class="p-2 rounded-full hover:bg-charcoal-100 text-charcoal-600 transition">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Cart Items List -->
+                <div id="cartItemsList" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 sm:space-y-4"></div>
+
+                <!-- Empty State -->
+                <div id="emptyCartState"
+                    class="hidden flex-1 flex flex-col items-center justify-center p-8 text-center">
+                    <div
+                        class="w-16 h-16 rounded-full bg-charcoal-100 flex items-center justify-center text-charcoal-400 mb-3">
+                        <i data-lucide="shopping-bag" class="w-8 h-8"></i>
+                    </div>
+                    <p class="font-serif text-lg sm:text-xl font-bold text-charcoal-900">Aapka cart khali hai</p>
+                    <p class="text-xs text-charcoal-500 mt-1 max-w-xs">Koi sketch pasand karein ya custom portrait order
+                        create karein.</p>
+                </div>
+
+                <!-- Drawer Footer & Checkout -->
+                <div id="cartFooter" class="p-4 sm:p-5 border-t border-charcoal-200 bg-white space-y-3">
+                    <div class="space-y-1.5 text-xs">
+                        <input type="text" id="custName" placeholder="Aapka Naam (Customer Name)"
+                            class="w-full bg-cream border border-charcoal-200 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-charcoal-900">
+                        <input type="text" id="custPhone" placeholder="Mobile / WhatsApp Number"
+                            class="w-full bg-cream border border-charcoal-200 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-charcoal-900">
+                        <input type="text" id="custCity" placeholder="City & Pincode (e.g. Pune - 411038)"
+                            class="w-full bg-cream border border-charcoal-200 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:border-charcoal-900">
+                    </div>
+
+                    <div class="flex justify-between items-center pt-1 font-bold text-sm">
+                        <span>Total:</span>
+                        <span id="cartTotal"
+                            class="font-serif text-xl sm:text-2xl font-bold text-charcoal-900">₹0</span>
+                    </div>
+
+                    <button id="checkoutWhatsAppBtn"
+                        class="w-full py-3.5 bg-charcoal-900 hover:bg-amberart text-white rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-lg transition active:scale-98 cursor-pointer">
+                        <i data-lucide="package-check" class="w-4 h-4"></i>
+                        <span>Confirm & Place Order (Direct to Studio)</span>
+                    </button>
+                    <p class="text-[10px] text-center text-emerald-700 font-medium">✓ Order notification direct artist ke Admin Panel me jayegi</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Artwork Preview Modal (Zoom) -->
+    <div id="previewModal"
+        class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-4 bg-charcoal-900/80 backdrop-blur-md">
+        <div
+            class="relative bg-white rounded-2xl max-w-3xl w-full overflow-hidden shadow-2xl border border-charcoal-200 flex flex-col md:flex-row max-h-[90vh]">
+            <button id="closeModalBtn"
+                class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-charcoal-900/80 text-white flex items-center justify-center hover:bg-charcoal-900 transition">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+
+            <div class="md:w-1/2 bg-charcoal-100 flex items-center justify-center p-4">
+                <img id="modalImg" src="" alt="Sketch Zoom"
+                    class="max-h-64 md:max-h-[75vh] w-auto object-contain rounded-lg">
+            </div>
+
+            <div class="md:w-1/2 p-5 sm:p-6 flex flex-col justify-between overflow-y-auto">
+                <div class="space-y-3">
+                    <span id="modalCategory"
+                        class="text-[10px] font-bold text-amberart uppercase tracking-wider">Portrait</span>
+                    <h3 id="modalTitle" class="font-serif text-xl sm:text-2xl font-bold text-charcoal-900">Artwork Title
+                    </h3>
+
+                    <div class="space-y-1 text-xs text-charcoal-600 bg-cream p-3 rounded-xl border border-charcoal-200">
+                        <p><strong>Medium:</strong> <span id="modalMedium">Charcoal & Powder</span></p>
+                        <p><strong>Dimensions:</strong> <span id="modalDimensions">A3</span></p>
+                    </div>
+
+                    <p id="modalDesc" class="text-xs text-charcoal-500 leading-relaxed"></p>
+                </div>
+
+                <div class="pt-4 border-t border-charcoal-100 mt-4 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span id="modalPrice" class="font-serif text-2xl font-bold text-charcoal-900">₹2,499</span>
+                        <button id="modalViewOnWallBtn"
+                            class="text-xs font-bold text-amberart hover:underline flex items-center gap-1">
+                            <span>🖼️ Preview on Wall</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="modalAddToCartBtn"
+                            class="py-2.5 bg-charcoal-900 text-white rounded-xl text-xs font-bold hover:bg-amberart transition flex items-center justify-center gap-1.5">
+                            <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+                            <span>Add to Cart</span>
+                        </button>
+                        <button id="modalBuyWhatsAppBtn"
+                            class="py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center justify-center gap-1.5">
+                            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                            <span>Buy on WhatsApp</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast"
+        class="fixed bottom-16 sm:bottom-6 right-4 sm:right-6 z-50 bg-charcoal-900 text-white px-4 py-3 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span id="toastMsg">Artwork added to your cart!</span>
+    </div>
+
+    <!-- App JavaScript -->
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

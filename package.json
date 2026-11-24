@@ -1,0 +1,11 @@
+{
+  "name": "anmol-art-gallery",
+  "version": "1.0.0",
+  "description": "Anmol Art Gallery - Fullstack Handmade Artwork & Custom Portrait Studio with MySQL",
+  "type": "module",
+  "scripts": {
+    "server": "node backend/server.js",
+    "client": "npm --prefix Front-end run dev",
+    "build": "npm --prefix Front-end run build"
+  }
+}
