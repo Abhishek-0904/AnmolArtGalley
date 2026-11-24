@@ -1,6 +1,14 @@
 // Anmol Art Gallery - Backend MySQL API Client with Intelligent Offline Fallback
 
-const API_BASE = '/api';
+const getApiBase = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) {
+    return envUrl.replace(/\/$/, '') + '/api';
+  }
+  return '/api';
+};
+
+const API_BASE = getApiBase();
 
 export const api = {
   // 1. Health & Database connection check

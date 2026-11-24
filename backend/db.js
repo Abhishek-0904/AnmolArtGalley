@@ -12,6 +12,7 @@ const DB_CONFIG = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  ssl: (process.env.DB_SSL === 'true' || process.env.DB_SSL === '1') ? { rejectUnauthorized: false } : undefined,
 };
 
 const DB_NAME = process.env.DB_NAME || 'anmol_art_db';
@@ -25,18 +26,19 @@ export async function initDatabase() {
   isConnecting = true;
 
   try {
-    // 1. First connect without database to ensure database exists
-    const adminConnection = await mysql.createConnection({
-      host: DB_CONFIG.host,
-      user: DB_CONFIG.user,
-      password: DB_CONFIG.password,
-      port: DB_CONFIG.port,
-    });
+    // 1. Try to ensure database exists (Works on localhost, cloud DBs usually already exist)
+    try {
+      const adminConnection = await mysql.createConnection({
+        ...DB_CONFIG,
+      });
 
-    await adminConnection.query(
-      `CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
-    );
-    await adminConnection.end();
+      await adminConnection.query(
+        `CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+      );
+      await adminConnection.end();
+    } catch {
+      // Cloud databases like TiDB/Aiven might restrict CREATE DATABASE, safe to proceed
+    }
 
     // 2. Create pool connected to the database
     if (!pool) {
