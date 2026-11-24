@@ -19,6 +19,11 @@ app.get('/', (req, res) => {
     message: '🎨 Anmol Art Gallery Backend API is Online & Running Successfully!',
     status: 'online',
     mysql: isDbConnected(),
+    db_host: process.env.DB_HOST || 'NOT SET',
+    db_user: process.env.DB_USER || 'NOT SET',
+    db_name: process.env.DB_NAME || 'NOT SET',
+    db_port: process.env.DB_PORT || 'NOT SET',
+    db_ssl: process.env.DB_SSL || 'NOT SET',
     endpoints: {
       health: '/api/health',
       settings: '/api/settings',
@@ -42,9 +47,30 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     mysql: isDbConnected(),
-    database: process.env.DB_NAME || 'anmol_art_db',
+    database: process.env.DB_NAME || 'test',
     port: PORT,
   });
+});
+
+// DB Debug/Test Route - shows exact connection error
+app.get('/api/db-test', async (req, res) => {
+  const mysql = await import('mysql2/promise');
+  try {
+    const conn = await mysql.default.createConnection({
+      host: process.env.DB_HOST || 'localhost',
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      port: Number(process.env.DB_PORT) || 3306,
+      database: process.env.DB_NAME || 'test',
+      ssl: (process.env.DB_SSL === 'true' || process.env.DB_SSL === '1') ? { rejectUnauthorized: false } : undefined,
+      connectTimeout: 10000,
+    });
+    await conn.query('SELECT 1');
+    await conn.end();
+    res.json({ success: true, message: 'DB Connected!', user: process.env.DB_USER, host: process.env.DB_HOST, db: process.env.DB_NAME });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message, code: err.code, user: process.env.DB_USER, host: process.env.DB_HOST, db: process.env.DB_NAME });
+  }
 });
 
 // ==========================================

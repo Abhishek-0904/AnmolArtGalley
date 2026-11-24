@@ -15,7 +15,7 @@ const DB_CONFIG = {
   ssl: (process.env.DB_SSL === 'true' || process.env.DB_SSL === '1') ? { rejectUnauthorized: false } : undefined,
 };
 
-const DB_NAME = process.env.DB_NAME || 'anmol_art_db';
+const DB_NAME = process.env.DB_NAME || 'test';
 
 let pool = null;
 let isConnected = false;
