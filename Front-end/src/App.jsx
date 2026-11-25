@@ -240,6 +240,28 @@ export default function App() {
         if (dbReviews) {
           setReviews(dbReviews.filter(r => !['rev-1', 'rev-2', 'rev-3', 'rev-test-101'].includes(r.id)));
         }
+
+        // Auto-sync any reviews added previously in Local Storage Mode up to MySQL
+        try {
+          const localReviews = JSON.parse(localStorage.getItem('anmol_reviews') || '[]');
+          const dbReviewIds = new Set((dbReviews || []).map((r) => r.id));
+          for (const lr of localReviews) {
+            if (!dbReviewIds.has(lr.id) && !['rev-1', 'rev-2', 'rev-3', 'rev-test-101'].includes(lr.id)) {
+              api.createReview(lr).catch(() => {});
+            }
+          }
+        } catch {}
+
+        // Auto-sync any artworks added previously in Local Storage Mode up to MySQL
+        try {
+          const localArtworks = JSON.parse(localStorage.getItem('kalakriti_artworks') || '[]');
+          const dbArtIds = new Set((dbArtworks || []).map((a) => a.id));
+          for (const la of localArtworks) {
+            if (!dbArtIds.has(la.id) && la.id !== 'art-0' && !la.id.match(/^art-[1-6]$/)) {
+              api.createArtwork(la).catch(() => {});
+            }
+          }
+        } catch {}
       } else if (health.connected && !health.mysql) {
         setDbStatus({
           connected: true,
@@ -323,7 +345,7 @@ export default function App() {
     };
   }, []);
 
-  const handleSubmitFeedback = (e) => {
+  const handleSubmitFeedback = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!feedbackForm.name.trim()) {
       showToast('⚠️ Kripya apna Naam dalein!');
@@ -355,9 +377,6 @@ export default function App() {
       localStorage.setItem('kalakriti_reviews', JSON.stringify(updated));
     } catch {}
 
-    // 3. Save to MySQL via API
-    api.createReview(newRev).catch(() => {});
-
     setIsFeedbackOpen(false);
     setFeedbackForm({
       name: '',
@@ -366,7 +385,14 @@ export default function App() {
       item: 'Custom Portrait Order',
       quote: ''
     });
-    showToast('🎉 Shukriya! Aapka review permanent save ho gaya hai.');
+
+    // 3. Save to MySQL via API
+    const res = await api.createReview(newRev);
+    if (res && res.success !== false) {
+      showToast('🎉 Shukriya! Review MySQL Database me live save ho gaya hai.');
+    } else {
+      showToast('🎉 Shukriya! Review save ho gaya hai.');
+    }
   };
 
   const showToast = (msg) => {
@@ -464,7 +490,7 @@ export default function App() {
     setIsArtworkModalOpen(true);
   };
 
-  const handleSaveArtwork = (e) => {
+  const handleSaveArtwork = async (e) => {
     e.preventDefault();
     if (!artworkForm.title || !artworkForm.price || !artworkForm.image) {
       alert('Kripya Title, Price aur Image URL/File zaroor dalein.');
@@ -477,8 +503,13 @@ export default function App() {
       setArtworks((prev) =>
         prev.map((item) => (item.id === artworkForm.id ? updated : item))
       );
-      api.updateArtwork(artworkForm.id, updated);
-      showToast(`Artwork "${artworkForm.title}" updated in MySQL!`);
+      setIsArtworkModalOpen(false);
+      const res = await api.updateArtwork(artworkForm.id, updated);
+      if (res && res.success !== false) {
+        showToast(`✓ Artwork "${artworkForm.title}" MySQL Database me update ho gaya!`);
+      } else {
+        showToast(`Artwork update saved locally.`);
+      }
     } else {
       // Add new
       const newArt = {
@@ -487,11 +518,14 @@ export default function App() {
         price: Number(artworkForm.price)
       };
       setArtworks((prev) => [newArt, ...prev]);
-      api.createArtwork(newArt);
-      showToast(`New artwork "${newArt.title}" saved in MySQL!`);
+      setIsArtworkModalOpen(false);
+      const res = await api.createArtwork(newArt);
+      if (res && res.success !== false) {
+        showToast(`✓ New artwork "${newArt.title}" MySQL Database me save ho gaya!`);
+      } else {
+        showToast(`Artwork locally save ho gaya.`);
+      }
     }
-
-    setIsArtworkModalOpen(false);
   };
 
   const handleDeleteArtwork = (artId, title) => {

@@ -13,6 +13,12 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Request logging middleware for live Render debugging
+app.use((req, res, next) => {
+  console.log(`[API ${req.method}] ${req.url}`);
+  next();
+});
+
 // Welcome / Status Root Route
 app.get('/', (req, res) => {
   res.json({
@@ -184,7 +190,19 @@ app.post('/api/artworks', async (req, res) => {
       `INSERT INTO \`artworks\` (
         id, title, category, medium, paper, dimensions, price, 
         image, description, is_original, tag, listing_type
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        title = VALUES(title),
+        category = VALUES(category),
+        medium = VALUES(medium),
+        paper = VALUES(paper),
+        dimensions = VALUES(dimensions),
+        price = VALUES(price),
+        image = VALUES(image),
+        description = VALUES(description),
+        is_original = VALUES(is_original),
+        tag = VALUES(tag),
+        listing_type = VALUES(listing_type)`,
       [
         id,
         art.title,
@@ -201,6 +219,7 @@ app.post('/api/artworks', async (req, res) => {
       ]
     );
 
+    console.log(`[MySQL] Artwork saved: ${id} - ${art.title}`);
     res.status(201).json({ success: true, id, message: 'Artwork created' });
   } catch (err) {
     console.error('Error creating artwork:', err);
@@ -442,6 +461,7 @@ app.post('/api/reviews', async (req, res) => {
       ]
     );
 
+    console.log(`[MySQL] Review saved: ${id} by ${rev.name}`);
     res.status(201).json({ success: true, id, message: 'Review saved' });
   } catch (err) {
     console.error('Error creating review:', err);

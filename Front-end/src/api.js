@@ -2,10 +2,18 @@
 
 const getApiBase = () => {
   const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl) {
+  if (envUrl && envUrl.trim() !== '') {
     return envUrl.replace(/\/$/, '') + '/api';
   }
-  return '/api';
+  // If running locally in development, use /api which Vite proxies to localhost:5000
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return '/api';
+    }
+  }
+  // Production fallback: directly point to the live Render backend
+  return 'https://anmolartgalley.onrender.com/api';
 };
 
 const API_BASE = getApiBase();
@@ -65,9 +73,11 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(artwork),
       });
-      return await res.json();
+      const data = await res.json();
+      return res.ok ? data : { success: false, error: data?.error || 'Failed to save artwork' };
     } catch (err) {
-      return null;
+      console.error('[API Error] createArtwork:', err);
+      return { success: false, error: err.message };
     }
   },
 
@@ -78,9 +88,11 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(artwork),
       });
-      return res.ok;
+      const data = await res.json();
+      return res.ok ? data : { success: false, error: data?.error || 'Failed to update artwork' };
     } catch (err) {
-      return false;
+      console.error('[API Error] updateArtwork:', err);
+      return { success: false, error: err.message };
     }
   },
 
@@ -174,9 +186,11 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(review),
       });
-      return await res.json();
+      const data = await res.json();
+      return res.ok ? data : { success: false, error: data?.error || 'Failed to save review' };
     } catch (err) {
-      return null;
+      console.error('[API Error] createReview:', err);
+      return { success: false, error: err.message };
     }
   },
 
