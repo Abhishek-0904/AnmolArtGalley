@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import wallRoomImg from './assets/wall-room.jpg';
 import heroMainImg from './assets/hero-main.jpg';
+import artistImg from './assets/artist-anmol.jpg';
 import { api } from './api';
 
 // Default initial artworks (Only the real Radha Krishna masterpiece requested by user)
@@ -1463,16 +1464,20 @@ export default function App() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
               
               <div className="lg:col-span-5">
-                <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/5] max-w-sm mx-auto shadow-md">
+                <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden aspect-[4/5] max-w-sm mx-auto shadow-xl border border-[#E8E5DF] group">
                   <img 
-                    src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80" 
-                    alt="Artist Working in Studio" 
-                    className="w-full h-full object-cover"
+                    src={artistImg} 
+                    alt={settings.artistName || 'Anmol - Fine Artist'} 
+                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A1816]/90 via-transparent to-transparent flex items-end p-5">
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A1816]/90 via-[#1A1816]/20 to-transparent flex items-end p-5 sm:p-6">
                     <div className="text-white">
-                      <p className="font-serif text-xl sm:text-2xl font-bold">{settings.artistName}</p>
-                      <p className="text-[11px] sm:text-xs text-[#E8E5DF]">{settings.artistTitle}</p>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-bold">Verified Artist</span>
+                      </div>
+                      <p className="font-serif text-xl sm:text-2xl font-bold tracking-wide">{settings.artistName}</p>
+                      <p className="text-[11px] sm:text-xs text-[#E8E5DF] font-medium">{settings.artistTitle}</p>
                     </div>
                   </div>
                 </div>
