@@ -25,7 +25,9 @@ const DEFAULT_SETTINGS = {
   artistName: 'Anmol',
   artistTitle: 'Lead Fine Artist & Charcoal Specialist',
   artistBio: 'Main professional charcoal & graphite portrait artist hoon. Mera har artwork 300 GSM Fabriano acid-free paper par premium pencils se banaya jata hai.',
-  announcement: 'Taking Custom Portrait Orders | Free Safe Wooden Packing'
+  announcement: 'Taking Custom Portrait Orders | Free Safe Wooden Packing',
+  upiId: 'dilipbhai-bhargav@ptyes',
+  upiName: 'ANMOL ARTS GALLERY'
 };
 
 const DEFAULT_REVIEWS = [];

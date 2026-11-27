@@ -96,9 +96,18 @@ async function createTables() {
       \`artist_bio\` TEXT,
       \`announcement\` TEXT,
       \`admin_password\` VARCHAR(255) DEFAULT 'AnmolArtGallery',
+      \`upi_id\` VARCHAR(255) DEFAULT 'dilipbhai-bhargav@ptyes',
+      \`upi_name\` VARCHAR(255) DEFAULT 'ANMOL ARTS GALLERY',
       \`updated_at\` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
   `);
+
+  try {
+    await pool.query("ALTER TABLE `settings` ADD COLUMN `upi_id` VARCHAR(255) DEFAULT 'dilipbhai-bhargav@ptyes'");
+  } catch {}
+  try {
+    await pool.query("ALTER TABLE `settings` ADD COLUMN `upi_name` VARCHAR(255) DEFAULT 'ANMOL ARTS GALLERY'");
+  } catch {}
 
   // Artworks table
   await pool.query(`

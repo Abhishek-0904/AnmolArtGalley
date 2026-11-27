@@ -106,6 +106,8 @@ app.get('/api/settings', async (req, res) => {
       artistBio: s.artist_bio,
       announcement: s.announcement,
       adminPassword: s.admin_password,
+      upiId: s.upi_id || 'dilipbhai-bhargav@ptyes',
+      upiName: s.upi_name || 'ANMOL ARTS GALLERY',
     });
   } catch (err) {
     console.error('Error fetching settings:', err);
@@ -119,25 +121,49 @@ app.put('/api/settings', async (req, res) => {
     if (!pool) return res.status(503).json({ error: 'Database not connected' });
 
     const s = req.body;
-    await pool.query(
-      `UPDATE \`settings\` SET 
-        studio_name = ?, tagline = ?, logo_letter = ?, whatsapp_number = ?, 
-        instagram_handle = ?, instagram_url = ?, artist_name = ?, artist_title = ?, 
-        artist_bio = ?, announcement = ?
-       WHERE id = 1`,
-      [
-        s.studioName,
-        s.tagline,
-        s.logoLetter,
-        s.whatsappNumber,
-        s.instagramHandle,
-        s.instagramUrl,
-        s.artistName,
-        s.artistTitle,
-        s.artistBio,
-        s.announcement,
-      ]
-    );
+    try {
+      await pool.query(
+        `UPDATE \`settings\` SET 
+          studio_name = ?, tagline = ?, logo_letter = ?, whatsapp_number = ?, 
+          instagram_handle = ?, instagram_url = ?, artist_name = ?, artist_title = ?, 
+          artist_bio = ?, announcement = ?, upi_id = ?, upi_name = ?
+         WHERE id = 1`,
+        [
+          s.studioName,
+          s.tagline,
+          s.logoLetter,
+          s.whatsappNumber,
+          s.instagramHandle,
+          s.instagramUrl,
+          s.artistName,
+          s.artistTitle,
+          s.artistBio,
+          s.announcement,
+          s.upiId || 'dilipbhai-bhargav@ptyes',
+          s.upiName || 'ANMOL ARTS GALLERY',
+        ]
+      );
+    } catch {
+      await pool.query(
+        `UPDATE \`settings\` SET 
+          studio_name = ?, tagline = ?, logo_letter = ?, whatsapp_number = ?, 
+          instagram_handle = ?, instagram_url = ?, artist_name = ?, artist_title = ?, 
+          artist_bio = ?, announcement = ?
+         WHERE id = 1`,
+        [
+          s.studioName,
+          s.tagline,
+          s.logoLetter,
+          s.whatsappNumber,
+          s.instagramHandle,
+          s.instagramUrl,
+          s.artistName,
+          s.artistTitle,
+          s.artistBio,
+          s.announcement,
+        ]
+      );
+    }
 
     res.json({ success: true, message: 'Settings updated successfully' });
   } catch (err) {
@@ -351,21 +377,26 @@ app.post('/api/orders', async (req, res) => {
       `INSERT INTO \`orders\` (
         id, order_date, customer_name, phone, address, items, total, 
         status, order_type, custom_details
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        status = VALUES(status),
+        custom_details = VALUES(custom_details),
+        total = VALUES(total)`,
       [
         id,
         orderDate,
-        o.customerName,
-        o.phone,
-        o.address || '',
+        o.customerName || o.name || 'Anonymous',
+        o.customerPhone || o.phone || '',
+        o.customerCity || o.address || '',
         JSON.stringify(o.items || []),
         o.total || 0,
         o.status || 'New',
-        o.type || 'ready',
-        JSON.stringify(o.customDetails || null),
+        o.type || o.orderType || 'ready',
+        JSON.stringify(o.customDetails || o.paymentDetails || null),
       ]
     );
 
+    console.log(`[MySQL] Order received: ${id} by ${o.customerName || o.name} (Total: ₹${o.total})`);
     res.status(201).json({ success: true, id, message: 'Order created' });
   } catch (err) {
     console.error('Error creating order:', err);

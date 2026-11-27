@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import wallRoomImg from './assets/wall-room.jpg';
 import heroMainImg from './assets/hero-main.jpg';
 import artistImg from './assets/artist-anmol.jpg';
+import paymentQrImg from './assets/payment-qr.jpg';
+import DynamicUpiQr from './DynamicUpiQr';
 import { api } from './api';
 
 // Default initial artworks (Only the real Radha Krishna masterpiece requested by user)
@@ -35,7 +37,9 @@ const DEFAULT_SETTINGS = {
   artistName: 'Anmol',
   artistTitle: 'Lead Fine Artist & Charcoal Specialist',
   artistBio: 'Main pichle 8 saalon se professional charcoal & graphite portrait artist hoon. Mera har artwork 300 GSM Fabriano acid-free paper par premium pencils se banaya jata hai.',
-  announcement: 'Taking Custom Portrait Orders | Free Safe Wooden Packing'
+  announcement: 'Taking Custom Portrait Orders | Free Safe Wooden Packing',
+  upiId: 'dilipbhai-bhargav@ptyes',
+  upiName: 'ANMOL ARTS GALLERY'
 };
 
 const ADMIN_PASSWORD = 'admin'; // Default login password
@@ -164,6 +168,16 @@ export default function App() {
   const [customerCity, setCustomerCity] = useState('');
   const [placedOrder, setPlacedOrder] = useState(null);
 
+  // UPI QR Payment Modal State
+  const [paymentModalData, setPaymentModalData] = useState(null);
+  const [copiedUpi, setCopiedUpi] = useState(false);
+
+  // Admin Instant UPI QR Generator State
+  const [adminQrAmount, setAdminQrAmount] = useState(5000);
+  const [adminQrNote, setAdminQrNote] = useState('Custom Artwork Order');
+  const [adminQrClientPhone, setAdminQrClientPhone] = useState('');
+  const [adminQrCopiedLink, setAdminQrCopiedLink] = useState(false);
+
   // 5. Dynamic Customer Reviews State (Only real customer/admin reviews)
   const [reviews, setReviews] = useState(() => {
     try {
@@ -220,6 +234,12 @@ export default function App() {
         if (dbSettings) {
           if (dbSettings.whatsappNumber === '919876543210' || !dbSettings.whatsappNumber) {
             dbSettings.whatsappNumber = '916352700572';
+          }
+          if (!dbSettings.upiId) {
+            dbSettings.upiId = 'dilipbhai-bhargav@ptyes';
+          }
+          if (!dbSettings.upiName) {
+            dbSettings.upiName = 'ANMOL ARTS GALLERY';
           }
           setSettings(dbSettings);
         }
@@ -714,7 +734,20 @@ export default function App() {
     }
   };
 
-  // Direct Cart Order: Saves into Orders Manager (Admin Panel), does NOT redirect to WhatsApp!
+  // Copy UPI ID to clipboard
+  const handleCopyUpi = () => {
+    const upi = settings.upiId || 'dilipbhai-bhargav@ptyes';
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(upi);
+      }
+    } catch {}
+    setCopiedUpi(true);
+    showToast('✓ UPI ID Copied: ' + upi);
+    setTimeout(() => setCopiedUpi(false), 3000);
+  };
+
+  // Direct Cart Order: Opens UPI Payment Modal
   const handleDirectCartOrder = () => {
     if (cart.length === 0) return;
     const name = customerName.trim();
@@ -726,39 +759,120 @@ export default function App() {
       return;
     }
     if (!phone) {
-      showToast('⚠️ Kripya apna Mobile number dalein!');
+      showToast('⚠️ Kripya apna Mobile / WhatsApp number dalein!');
       return;
     }
 
-    const itemsSummary = cart.map(item => `• ${item.qty}x ${item.title} (${item.dimensions}) - ₹${item.price * item.qty}`).join('\n');
-    const itemsShort = cart.map(item => `${item.qty}x ${item.title}`).join(', ');
+    const itemsShort = cart.map(item => `${item.qty}x ${item.title} (${item.dimensions})`).join(', ');
+    const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
 
-    // Save into Orders Manager for Admin
-    const newOrder = {
-      id: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
-      date: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+    // Open UPI QR Payment Modal
+    setPaymentModalData({
+      orderId,
       customerName: name,
       customerPhone: phone,
-      customerCity: city || 'Not specified',
+      customerCity: city || 'India',
       items: itemsShort,
-      total: totalCartPrice,
+      totalAmount: totalCartPrice,
+      payType: 'advance',
+      payAmount: Math.round(totalCartPrice / 2),
+      utrNumber: '',
+      source: 'cart'
+    });
+    setIsCartOpen(false);
+  };
+
+  // Open UPI QR Payment for Custom Portrait Order
+  const handleOrderCustomWithUPI = () => {
+    const mediumNames = { pencil: 'Graphite Pencil', charcoal: 'Dark Charcoal', color: 'Color Pencil' };
+    const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+    const itemTitle = `Custom ${mediumNames[customMedium]} (${customSize}, ${customFaces} Face(s), Roll Tube)`;
+
+    const name = customerName.trim() || prompt('Aapka Naam (Customer Name) enter karein:');
+    if (!name) return;
+    const phone = customerPhone.trim() || prompt('Aapka WhatsApp / Mobile Number enter karein:');
+    if (!phone) return;
+    const city = customerCity.trim() || prompt('Aapka Delivery City / Address:') || 'India';
+
+    setCustomerName(name);
+    setCustomerPhone(phone);
+    setCustomerCity(city);
+
+    setPaymentModalData({
+      orderId,
+      customerName: name,
+      customerPhone: phone,
+      customerCity: city,
+      items: itemTitle,
+      totalAmount: customPrice,
+      payType: 'advance',
+      payAmount: Math.round(customPrice / 2),
+      utrNumber: '',
+      source: 'custom'
+    });
+  };
+
+  // Confirm UPI Payment & Submit Order
+  const handleConfirmPaymentAndOrder = async () => {
+    if (!paymentModalData) return;
+    const utr = (paymentModalData.utrNumber || '').trim();
+    if (!utr || utr.length < 6) {
+      alert('⚠️ Kripya valid UPI UTR / Ref No. (from Paytm/GPay/PhonePe) enter karein taaki artist payment verify kar sakein.');
+      return;
+    }
+
+    const isAdvance = paymentModalData.payType === 'advance';
+    const balance = isAdvance ? paymentModalData.totalAmount - paymentModalData.payAmount : 0;
+    const payStatusLabel = isAdvance ? 'Advance Paid (50%)' : 'Full Paid (100%)';
+
+    const newOrder = {
+      id: paymentModalData.orderId,
+      date: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }),
+      customerName: paymentModalData.customerName,
+      customerPhone: paymentModalData.customerPhone,
+      customerCity: paymentModalData.customerCity || 'Not specified',
+      items: paymentModalData.items,
+      total: paymentModalData.totalAmount,
       status: 'New',
-      source: 'Direct Website Order'
+      orderType: paymentModalData.source === 'custom' ? 'custom' : 'ready',
+      customDetails: {
+        paymentMode: 'Paytm_UPI_QR',
+        upiId: settings.upiId || 'dilipbhai-bhargav@ptyes',
+        upiName: settings.upiName || 'ANMOL ARTS GALLERY',
+        payType: paymentModalData.payType,
+        paidAmount: paymentModalData.payAmount,
+        balanceDue: balance,
+        utrNumber: utr,
+        paymentStatus: payStatusLabel
+      }
     };
 
-    setOrders((prev) => [newOrder, ...prev]);
+    setOrders((prev) => [newOrder, ...prev.filter(o => o.id !== newOrder.id)]);
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('kalakriti_orders') || '[]');
+      localStorage.setItem('kalakriti_orders', JSON.stringify([newOrder, ...saved.filter(o => o.id !== newOrder.id)]));
+    } catch {}
+
     api.createOrder(newOrder);
     playOrderChime();
 
-    // Show Confirmation Dialog & clear inputs
-    setPlacedOrder(newOrder);
+    setPlacedOrder({
+      ...newOrder,
+      paidAmount: paymentModalData.payAmount,
+      balanceDue: balance,
+      payType: paymentModalData.payType,
+      utrNumber: utr
+    });
+
+    setPaymentModalData(null);
     setCart([]);
     setCustomerName('');
     setCustomerPhone('');
     setCustomerCity('');
     setIsCartOpen(false);
 
-    showToast(`🎉 Order #${newOrder.id} placed! Sent to Admin Panel.`);
+    showToast(`🎉 Order #${newOrder.id} successfully recorded! Payment verified.`);
   };
 
   // Helper to determine if an artwork is a completed custom order
@@ -1486,16 +1600,22 @@ export default function App() {
 
                 <div className="space-y-2 pt-2">
                   <button
-                    onClick={handleOrderCustomWhatsApp}
-                    className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow transition flex items-center justify-center gap-2 active:scale-98"
+                    onClick={handleOrderCustomWithUPI}
+                    className="w-full py-3.5 bg-[#1A1816] hover:bg-[#B87333] text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
                   >
-                    <span>💬 Order on WhatsApp (Fastest)</span>
+                    <span>💳 Pay 50% Advance & Book Portrait (UPI QR)</span>
+                  </button>
+                  <button
+                    onClick={handleOrderCustomWhatsApp}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
+                  >
+                    <span>💬 Order via WhatsApp Directly</span>
                   </button>
                   <button
                     onClick={handleAddCustomToCart}
-                    className="w-full py-3 border border-[#1A1816] text-[#1A1816] hover:bg-[#1A1816] hover:text-white rounded-xl text-xs font-semibold transition active:scale-98"
+                    className="w-full py-2.5 border border-[#1A1816] text-[#1A1816] hover:bg-[#1A1816] hover:text-white rounded-xl text-xs font-semibold transition active:scale-98 cursor-pointer"
                   >
-                    Add to Cart & Checkout Here
+                    🛒 Add Custom Portrait to Cart
                   </button>
                 </div>
               </div>
@@ -1936,6 +2056,18 @@ export default function App() {
               >
                 <span>⚙️ Store & Brand Settings</span>
               </button>
+
+              <button
+                onClick={() => setAdminTab('qr-generator')}
+                className={`py-3 border-b-2 transition flex items-center gap-2 whitespace-nowrap ${
+                  adminTab === 'qr-generator'
+                    ? 'border-[#B87333] text-[#B87333]'
+                    : 'border-transparent text-[#6B6560] hover:text-[#1A1816]'
+                }`}
+              >
+                <span>⚡ Instant UPI QR Generator</span>
+                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-1.5 py-0.5 rounded-full font-bold">₹ Locked</span>
+              </button>
             </div>
 
             {/* Dashboard Body Content */}
@@ -2097,6 +2229,22 @@ export default function App() {
                             <p className="text-xs font-semibold text-[#B87333]">
                               📦 {ord.items}
                             </p>
+
+                            {ord.customDetails?.utrNumber && (
+                              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                                <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md">
+                                  💳 {ord.customDetails.paymentStatus || 'UPI Paid'} (₹{ord.customDetails.paidAmount?.toLocaleString('en-IN')})
+                                </span>
+                                {ord.customDetails.balanceDue > 0 && (
+                                  <span className="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-md">
+                                    ⏳ Balance: ₹{ord.customDetails.balanceDue?.toLocaleString('en-IN')}
+                                  </span>
+                                )}
+                                <span className="bg-gray-100 text-[#1A1816] font-mono font-bold px-2 py-0.5 rounded-md border border-[#E8E5DF]">
+                                  UTR: {ord.customDetails.utrNumber}
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
@@ -2111,9 +2259,22 @@ export default function App() {
                                 className="bg-[#FAF7F2] border border-[#E8E5DF] rounded-lg px-2 py-1 text-xs font-semibold"
                               >
                                 <option value="New">New</option>
+                                <option value="Payment Verified">Payment Verified</option>
                                 <option value="In Progress">In Progress</option>
                                 <option value="Completed">Completed</option>
+                                <option value="Delivered">Delivered</option>
                               </select>
+                              {ord.customerPhone && ord.customerPhone !== 'In WhatsApp Chat' && (
+                                <a
+                                  href={`https://wa.me/${ord.customerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${ord.customerName}! Your order #${ord.id} at Anmol Art Gallery has been verified and confirmed.`)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-2 py-1 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white rounded-lg text-xs font-semibold border border-emerald-300 transition flex items-center gap-1"
+                                  title="Chat with client on WhatsApp"
+                                >
+                                  <span>💬 Chat</span>
+                                </a>
+                              )}
                               <button
                                 onClick={() => handlePromoteOrderToPortfolio(ord)}
                                 className="px-2 py-1 bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white rounded-lg text-xs font-semibold border border-emerald-300 transition flex items-center gap-1"
@@ -2241,6 +2402,52 @@ export default function App() {
                       <p className="text-[10px] text-[#6B6560] mt-1">Header, About Artist aur Footer me Instagram link yahan se control hota hai.</p>
                     </div>
 
+                    <div className="pt-3 border-t border-[#E8E5DF] space-y-3">
+                      <div>
+                        <h4 className="font-bold text-sm text-[#1A1816] flex items-center gap-1.5">
+                          <span>💳</span>
+                          <span>UPI QR Payment Settings</span>
+                        </h4>
+                        <p className="text-[11px] text-[#6B6560]">
+                          Website par customer payments ke liye Paytm / UPI configuration.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold text-[#3D3935] mb-1">Official UPI ID (VPA)</label>
+                          <input
+                            type="text"
+                            value={settings.upiId || 'dilipbhai-bhargav@ptyes'}
+                            onChange={(e) => setSettings({ ...settings, upiId: e.target.value })}
+                            placeholder="e.g. dilipbhai-bhargav@ptyes"
+                            className="w-full bg-[#FAF7F2] border border-[#E8E5DF] rounded-xl px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:border-[#1A1816]"
+                          />
+                          <p className="text-[10px] text-[#6B6560] mt-1">Payment modal me yahi UPI ID customer ko display aur copy hogi.</p>
+                        </div>
+                        <div>
+                          <label className="block font-bold text-[#3D3935] mb-1">Business Name on UPI</label>
+                          <input
+                            type="text"
+                            value={settings.upiName || 'ANMOL ARTS GALLERY'}
+                            onChange={(e) => setSettings({ ...settings, upiName: e.target.value })}
+                            placeholder="ANMOL ARTS GALLERY"
+                            className="w-full bg-[#FAF7F2] border border-[#E8E5DF] rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-[#1A1816]"
+                          />
+                          <p className="text-[10px] text-[#6B6560] mt-1">UPI app me jo payee name display hota hai.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 bg-[#FAF7F2] p-3 rounded-2xl border border-[#E8E5DF]">
+                        <img src={paymentQrImg} alt="Payment QR" className="w-16 h-20 object-contain rounded-lg border border-[#E8E5DF] bg-white p-1" />
+                        <div className="text-xs">
+                          <p className="font-bold text-[#1A1816]">Active Payment QR Code</p>
+                          <p className="text-[11px] text-[#6B6560] mt-0.5">Paytm / All UPI Apps • Verified: <strong>{settings.upiName || 'ANMOL ARTS GALLERY'}</strong></p>
+                          <span className="inline-block mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">✓ Verified & Live on Website</span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="pt-2 flex flex-col sm:flex-row justify-between items-center gap-3">
                       <button
                         type="submit"
@@ -2346,6 +2553,188 @@ export default function App() {
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* TAB 5: INSTANT UPI QR GENERATOR (CUSTOM AMOUNT TOOL) */}
+              {adminTab === 'qr-generator' && (
+                <div className="max-w-4xl mx-auto space-y-6">
+                  {/* Top Intro Banner */}
+                  <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/60 p-5 rounded-3xl border border-amber-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-900 bg-amber-200/60 px-2.5 py-0.5 rounded-full border border-amber-300">
+                        ⚡ Instant Billing Tool
+                      </span>
+                      <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1A1816] mt-1">
+                        Instant UPI Payment QR Generator
+                      </h3>
+                      <p className="text-xs text-[#6B6560] mt-0.5">
+                        Aap yahan jo bhi price enter karenge (jaise ₹5,000 ya koi bhi custom amount), uska live QR code generate ho jayega. Customer scan karega toh direct locked amount aayegi aur paise seedhe <strong>{settings.upiId || 'dilipbhai-bhargav@ptyes'}</strong> par transfer honge!
+                      </p>
+                    </div>
+
+                    <div className="bg-white/90 backdrop-blur px-3.5 py-2.5 rounded-2xl border border-amber-200 text-xs shrink-0 text-left font-mono shadow-sm">
+                      <span className="text-[10px] text-[#6B6560] block font-sans">Official UPI ID:</span>
+                      <strong className="text-emerald-800 text-sm">{settings.upiId || 'dilipbhai-bhargav@ptyes'}</strong>
+                      <span className="text-[10px] text-[#6B6560] block font-sans mt-1">Registered Payee Name:</span>
+                      <strong className="text-[#1A1816] font-sans">{settings.upiName || 'ANMOL ARTS GALLERY'}</strong>
+                    </div>
+                  </div>
+
+                  {/* Main Grid: Controls on Left, Live QR on Right */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    {/* Controls Panel */}
+                    <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#E8E5DF] shadow-sm space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-[#1A1816] mb-1.5">
+                          Enter Custom Amount (₹) <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-serif text-xl font-bold text-[#6B6560]">₹</span>
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={adminQrAmount}
+                            onChange={(e) => setAdminQrAmount(Math.max(0, Number(e.target.value)))}
+                            placeholder="5000"
+                            className="w-full pl-9 pr-4 py-3 bg-[#FAF7F2] border-2 border-amber-300 focus:border-[#B87333] rounded-2xl font-serif text-2xl font-bold text-[#1A1816] focus:outline-none transition"
+                          />
+                        </div>
+                        <p className="text-[11px] text-[#6B6560] mt-1.5">
+                          💡 Customer ke PhonePe / Google Pay / Paytm app me yahi amount automatic lock ho kar aayegi.
+                        </p>
+                      </div>
+
+                      {/* Quick Amount Preset Chips */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#6B6560] uppercase tracking-wider mb-2">
+                          Quick Presets:
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {[500, 1000, 1500, 2000, 2500, 3500, 5000, 7500, 10000].map((amt) => (
+                            <button
+                              key={amt}
+                              type="button"
+                              onClick={() => setAdminQrAmount(amt)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                                adminQrAmount === amt
+                                  ? 'bg-[#1A1816] text-white shadow'
+                                  : 'bg-[#FAF7F2] text-[#3D3935] border border-[#E8E5DF] hover:border-[#B87333] hover:text-[#B87333]'
+                              }`}
+                            >
+                              ₹{amt.toLocaleString('en-IN')}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Purpose / Note */}
+                      <div>
+                        <label className="block text-xs font-bold text-[#1A1816] mb-1.5">
+                          Customer Name or Order Reference (Note)
+                        </label>
+                        <input
+                          type="text"
+                          value={adminQrNote}
+                          onChange={(e) => setAdminQrNote(e.target.value)}
+                          placeholder="e.g. Abhishek Custom A3 Sketch"
+                          className="w-full px-3.5 py-2.5 bg-[#FAF7F2] border border-[#E8E5DF] rounded-xl text-xs font-semibold focus:outline-none focus:border-[#1A1816]"
+                        />
+                        <p className="text-[10px] text-[#6B6560] mt-1">
+                          Transaction note bank statement me show hoga.
+                        </p>
+                      </div>
+
+                      {/* WhatsApp Client Sharing Tool */}
+                      <div className="pt-3 border-t border-[#E8E5DF] space-y-2">
+                        <label className="block text-xs font-bold text-[#1A1816]">
+                          💬 Send Payment Request directly to Customer on WhatsApp
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={adminQrClientPhone}
+                            onChange={(e) => setAdminQrClientPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                            placeholder="Client Phone (e.g. 9876543210)"
+                            className="flex-1 px-3 py-2 bg-[#FAF7F2] border border-[#E8E5DF] rounded-xl text-xs font-mono focus:outline-none focus:border-[#1A1816]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const amt = Number(adminQrAmount) || 0;
+                              if (amt <= 0) {
+                                alert('Kripya valid amount enter karein.');
+                                return;
+                              }
+                              const upiLink = `upi://pay?pa=${encodeURIComponent(settings.upiId || 'dilipbhai-bhargav@ptyes')}&pn=${encodeURIComponent(settings.upiName || 'ANMOL ARTS GALLERY')}&am=${amt}&cu=INR&tn=${encodeURIComponent(adminQrNote || 'Artwork Payment')}`;
+                              const message = `Namaste! 🙏\n\n*${settings.studioName || 'Anmol Art Gallery'}* se aapke sketch/artwork order ke liye official payment request:\n\n💰 *Amount:* ₹${amt.toLocaleString('en-IN')}\n🎨 *Note:* ${adminQrNote || 'Artwork Order'}\n🏦 *UPI ID:* ${settings.upiId || 'dilipbhai-bhargav@ptyes'}\n👤 *Payee Name:* ${settings.upiName || 'ANMOL ARTS GALLERY'}\n\n📱 *1-Click Direct UPI Link:* \n${upiLink}\n\nPayment complete hone ke baad screenshot ya 12-digit UPI UTR Ref number share kar dijiye. Dhanyawad! ✨`;
+                              const phone = adminQrClientPhone ? (adminQrClientPhone.startsWith('91') ? adminQrClientPhone : `91${adminQrClientPhone}`) : '';
+                              const waUrl = phone
+                                ? `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
+                                : `https://wa.me/?text=${encodeURIComponent(message)}`;
+                              window.open(waUrl, '_blank');
+                            }}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow transition cursor-pointer shrink-0"
+                          >
+                            <span>Share on WhatsApp</span>
+                            <span>↗</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Copy Link Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const amt = Number(adminQrAmount) || 0;
+                          const upiLink = `upi://pay?pa=${encodeURIComponent(settings.upiId || 'dilipbhai-bhargav@ptyes')}&pn=${encodeURIComponent(settings.upiName || 'ANMOL ARTS GALLERY')}&am=${amt}&cu=INR&tn=${encodeURIComponent(adminQrNote || 'Artwork Payment')}`;
+                          try {
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard.writeText(upiLink);
+                            }
+                          } catch {}
+                          setAdminQrCopiedLink(true);
+                          setTimeout(() => setAdminQrCopiedLink(false), 2500);
+                        }}
+                        className="w-full py-2.5 bg-[#FAF7F2] hover:bg-[#E8E5DF] text-[#1A1816] rounded-xl text-xs font-bold border border-[#E8E5DF] transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <span>{adminQrCopiedLink ? '✓ Payment Deep-Link Copied!' : '🔗 Copy UPI Deep-Link'}</span>
+                      </button>
+                    </div>
+
+                    {/* Live Dynamic QR Code Card */}
+                    <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#E8E5DF] shadow-md flex flex-col items-center text-center space-y-4">
+                      <div className="flex items-center justify-between w-full border-b border-[#E8E5DF] pb-3 text-xs">
+                        <span className="font-bold text-[#1A1816] flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                          Live Preview for Client
+                        </span>
+                        <span className="font-serif font-bold text-base text-emerald-800">
+                          ₹{(Number(adminQrAmount) || 0).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+
+                      <DynamicUpiQr
+                        upiId={settings.upiId || 'dilipbhai-bhargav@ptyes'}
+                        upiName={settings.upiName || 'ANMOL ARTS GALLERY'}
+                        amount={adminQrAmount}
+                        note={adminQrNote || 'Custom Order'}
+                        staticFallback={paymentQrImg}
+                        className="w-full max-w-sm"
+                      />
+
+                      <div className="text-[11px] text-[#6B6560] bg-emerald-50 text-emerald-900 border border-emerald-200/80 p-3 rounded-2xl w-full text-left space-y-1">
+                        <p className="font-bold flex items-center gap-1 text-emerald-950">
+                          <span>✓</span>
+                          <span>Zero Processing Fee & Instant Bank Settlement</span>
+                        </p>
+                        <p className="text-[10px] leading-relaxed">
+                          Koi third-party fee ya gateway commission nahi katega. Pura 100% amount direct aapke UPI ID <strong>{settings.upiId || 'dilipbhai-bhargav@ptyes'}</strong> par aayega.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -2875,11 +3264,11 @@ export default function App() {
                   onClick={handleDirectCartOrder}
                   className="w-full py-3.5 bg-[#1A1816] hover:bg-[#B87333] text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
                 >
-                  <span>📦 Confirm & Place Order (Direct to Studio)</span>
+                  <span>💳 Proceed to UPI QR Payment</span>
                 </button>
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-emerald-700 font-medium pt-0.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>Order direct artist ke Admin Dashboard me notify hoga</span>
+                  <span>50% Advance Booking ya Full Payment available</span>
                 </div>
               </div>
             )}
@@ -2887,16 +3276,143 @@ export default function App() {
         </div>
       )}
 
+      {/* ======================================================== */}
+      {/* 💳 OFFICIAL PAYTM / UPI QR PAYMENT MODAL */}
+      {/* ======================================================== */}
+      {paymentModalData && (
+        <div className="fixed inset-0 z-50 bg-[#1A1816]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-[#E8E5DF] relative my-auto max-h-[92vh] overflow-y-auto">
+            {/* Close Button */}
+            <button
+              onClick={() => setPaymentModalData(null)}
+              className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-[#FAF7F2] hover:bg-[#E8E5DF] text-[#1A1816] flex items-center justify-center text-sm font-bold transition cursor-pointer"
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div className="text-center space-y-1">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Official Studio UPI Payment
+              </span>
+              <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1A1816]">
+                Pay to {settings.upiName || 'ANMOL ARTS GALLERY'}
+              </h3>
+              <p className="text-xs text-[#6B6560]">
+                Order <span className="font-mono font-bold text-[#1A1816]">{paymentModalData.orderId}</span> • Total: <strong>₹{paymentModalData.totalAmount.toLocaleString('en-IN')}</strong>
+              </p>
+            </div>
+
+            {/* Advance Booking vs Full Payment Selector */}
+            <div className="mt-4 grid grid-cols-2 gap-2 bg-[#FAF7F2] p-1.5 rounded-2xl border border-[#E8E5DF] text-xs">
+              <button
+                type="button"
+                onClick={() => setPaymentModalData({
+                  ...paymentModalData,
+                  payType: 'advance',
+                  payAmount: Math.round(paymentModalData.totalAmount / 2)
+                })}
+                className={`py-2 px-2 rounded-xl font-bold transition flex flex-col items-center cursor-pointer ${
+                  paymentModalData.payType === 'advance'
+                    ? 'bg-[#1A1816] text-white shadow'
+                    : 'text-[#6B6560] hover:text-[#1A1816]'
+                }`}
+              >
+                <span>50% Advance Booking</span>
+                <span className="font-serif text-sm mt-0.5">₹{Math.round(paymentModalData.totalAmount / 2).toLocaleString('en-IN')}</span>
+                <span className={`text-[9px] font-normal ${paymentModalData.payType === 'advance' ? 'text-emerald-300' : 'text-emerald-700'}`}>Recommended</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPaymentModalData({
+                  ...paymentModalData,
+                  payType: 'full',
+                  payAmount: paymentModalData.totalAmount
+                })}
+                className={`py-2 px-2 rounded-xl font-bold transition flex flex-col items-center cursor-pointer ${
+                  paymentModalData.payType === 'full'
+                    ? 'bg-[#1A1816] text-white shadow'
+                    : 'text-[#6B6560] hover:text-[#1A1816]'
+                }`}
+              >
+                <span>100% Full Payment</span>
+                <span className="font-serif text-sm mt-0.5">₹{paymentModalData.totalAmount.toLocaleString('en-IN')}</span>
+                <span className={`text-[9px] font-normal ${paymentModalData.payType === 'full' ? 'text-amber-200' : 'text-[#6B6560]'}`}>One-time complete</span>
+              </button>
+            </div>
+
+            {paymentModalData.payType === 'advance' && (
+              <div className="mt-2 text-center text-[11px] text-amber-800 bg-amber-50 py-1.5 px-3 rounded-xl border border-amber-200/70">
+                💡 Baaki ₹{(paymentModalData.totalAmount - paymentModalData.payAmount).toLocaleString('en-IN')} sketch banke preview dekhne ke baad dispatch se pehle dena hoga.
+              </div>
+            )}
+
+            {/* Dynamic UPI QR Code with Locked Exact Amount */}
+            <DynamicUpiQr
+              upiId={settings.upiId || 'dilipbhai-bhargav@ptyes'}
+              upiName={settings.upiName || 'ANMOL ARTS GALLERY'}
+              amount={paymentModalData.payAmount}
+              orderId={paymentModalData.orderId}
+              note={`${settings.studioName || 'Anmol Art Gallery'} Order`}
+              staticFallback={paymentQrImg}
+              className="mt-4"
+            />
+
+            {/* UTR / Ref Number Entry Form */}
+            <div className="mt-4 space-y-2 text-left">
+              <label className="block text-xs font-bold text-[#1A1816]">
+                Enter 12-Digit UPI Ref / UTR Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 432109876543 (From your UPI app)"
+                value={paymentModalData.utrNumber}
+                onChange={(e) => setPaymentModalData({
+                  ...paymentModalData,
+                  utrNumber: e.target.value.replace(/[^0-9A-Za-z]/g, '')
+                })}
+                className="w-full bg-[#FAF7F2] border border-[#E8E5DF] rounded-xl px-3 py-2.5 text-xs sm:text-sm font-mono font-bold tracking-wider text-[#1A1816] focus:outline-none focus:border-[#1A1816]"
+                maxLength={24}
+              />
+              <p className="text-[10px] text-[#6B6560]">
+                Payment complete hone ke baad aapke UPI app (Paytm/GPay/PhonePe) ke receipt me <strong>12-digit UTR / UPI Ref No.</strong> dikhta hai. Use yahan enter karein.
+              </p>
+            </div>
+
+            {/* Submit & Confirm Button */}
+            <div className="mt-4 space-y-2">
+              <button
+                type="button"
+                onClick={handleConfirmPaymentAndOrder}
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
+              >
+                <span>✓ Confirm Payment & Place Order</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPaymentModalData(null)}
+                className="w-full py-2 text-xs text-[#6B6560] hover:text-[#1A1816] font-medium cursor-pointer"
+              >
+                Cancel / Edit Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 📦 ORDER CONFIRMATION MODAL (DIRECT ADMIN ORDER) */}
       {placedOrder && (
         <div className="fixed inset-0 z-50 bg-[#1A1816]/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border border-[#E8E5DF] space-y-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border border-[#E8E5DF] space-y-4 max-h-[92vh] overflow-y-auto">
             <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner font-bold">
               ✓
             </div>
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                Order Received
+                Payment Recorded
               </span>
               <h3 className="font-serif text-2xl font-bold text-[#1A1816] mt-2">
                 Order Placed Successfully!
@@ -2927,20 +3443,57 @@ export default function App() {
                 <span className="text-[#6B6560]">Artwork Items:</span>
                 <span className="font-bold text-[#1A1816] text-right truncate max-w-[200px]">{placedOrder.items}</span>
               </div>
-              <div className="flex justify-between pt-1">
-                <span className="font-bold text-[#1A1816]">Total Amount:</span>
-                <span className="font-serif text-base font-bold text-[#B87333]">₹{placedOrder.total.toLocaleString('en-IN')}</span>
+              <div className="flex justify-between border-b border-[#E8E5DF] pb-2">
+                <span className="text-[#6B6560]">Grand Total:</span>
+                <span className="font-serif text-sm font-bold text-[#1A1816]">₹{placedOrder.total?.toLocaleString('en-IN')}</span>
               </div>
+              <div className="flex justify-between border-b border-[#E8E5DF] pb-2 text-emerald-800">
+                <span className="font-bold">✓ Payment Paid:</span>
+                <span className="font-serif font-bold text-sm">₹{placedOrder.paidAmount?.toLocaleString('en-IN')} ({placedOrder.payType === 'advance' ? '50% Advance' : 'Full Paid'})</span>
+              </div>
+              {placedOrder.balanceDue > 0 && (
+                <div className="flex justify-between border-b border-[#E8E5DF] pb-2 text-amber-800">
+                  <span className="font-bold">⏳ Balance on Delivery:</span>
+                  <span className="font-serif font-bold">₹{placedOrder.balanceDue?.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+              {placedOrder.utrNumber && (
+                <div className="flex justify-between pt-1 text-[11px]">
+                  <span className="text-[#6B6560]">UPI UTR / Ref No:</span>
+                  <span className="font-mono font-bold text-[#1A1816] bg-white px-2 py-0.5 rounded border border-[#E8E5DF]">{placedOrder.utrNumber}</span>
+                </div>
+              )}
             </div>
 
             <div className="bg-amber-50 border border-amber-200/80 p-3 rounded-xl text-left text-[11px] text-[#8C5220] flex items-start gap-2">
               <span className="text-sm">🔔</span>
               <span>
-                <strong>Admin Notification Sent:</strong> Artist is order ko review karke processing & delivery confirm karne ke liye aapse sampark karenge.
+                <strong>Admin Notification Sent:</strong> Artist is order aur payment UTR ko verify karke processing shuru karenge.
               </span>
             </div>
 
             <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const isAdv = placedOrder.payType === 'advance';
+                  const msg = `*Hello ${settings.studioName}! I have placed Order #${placedOrder.id} and paid via UPI QR:*\n\n` +
+                    `👤 *Customer:* ${placedOrder.customerName}\n` +
+                    `📱 *Phone:* ${placedOrder.customerPhone}\n` +
+                    `📍 *Delivery City:* ${placedOrder.customerCity}\n` +
+                    `📦 *Items:* ${placedOrder.items}\n` +
+                    `💰 *Total Amount:* ₹${placedOrder.total?.toLocaleString('en-IN')}\n` +
+                    `💳 *Payment Paid:* ${isAdv ? `50% Advance (₹${placedOrder.paidAmount?.toLocaleString('en-IN')})` : `Full Paid (₹${placedOrder.paidAmount?.toLocaleString('en-IN')})`}\n` +
+                    (placedOrder.balanceDue > 0 ? `⏳ *Balance on Delivery:* ₹${placedOrder.balanceDue?.toLocaleString('en-IN')}\n` : '') +
+                    `🔢 *UPI UTR / Ref:* ${placedOrder.utrNumber || 'Verified'}\n\n` +
+                    `Please verify and confirm my order!`;
+                  window.open(`https://wa.me/${settings.whatsappNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+                }}
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              >
+                <span>💬 Send Proof on WhatsApp to Artist</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -2954,16 +3507,17 @@ export default function App() {
                   setPlacedOrder(null);
                   setIsFeedbackOpen(true);
                 }}
-                className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl text-xs font-bold transition shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                className="w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
                 <span>⭐ Rate & Give Order Feedback</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => setPlacedOrder(null)}
-                className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-[#3D3935] rounded-xl text-xs font-semibold transition cursor-pointer"
+                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-[#3D3935] rounded-xl text-xs font-semibold transition cursor-pointer"
               >
-                Done / Continue Exploring
+                Done / Close
               </button>
             </div>
           </div>
