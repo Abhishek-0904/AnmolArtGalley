@@ -960,20 +960,8 @@ export default function App() {
           
           {/* Dynamic Logo & Name */}
           <a href="#" className="flex items-center gap-2.5 sm:gap-3 group">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
-              <img 
-                src="/logo.png" 
-                alt={settings.studioName} 
-                className="w-full h-full object-contain filter drop-shadow group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.nextElementSibling;
-                  if (fallback) fallback.style.display = 'flex';
-                }}
-              />
-              <div className="hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#1A1816] items-center justify-center font-serif text-lg sm:text-xl font-bold bg-[#1A1816] text-[#FAF7F2] group-hover:bg-[#B87333] transition">
-                {settings.logoLetter || settings.studioName.charAt(0)}
-              </div>
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-[#1A1816] flex items-center justify-center font-serif text-lg sm:text-xl font-bold bg-[#1A1816] text-[#FAF7F2] group-hover:bg-[#B87333] transition shadow-sm shrink-0">
+              {settings.logoLetter || 'A'}
             </div>
             <div>
               <span className="font-serif text-xl sm:text-2xl font-bold tracking-tight block leading-none">
@@ -1784,7 +1772,9 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-8 border-b border-[#2A2724] text-center sm:text-left">
             <div className="md:col-span-6 space-y-2">
               <div className="flex items-center justify-center sm:justify-start gap-2.5">
-                <img src="/logo.png" alt={settings.studioName} className="w-8 h-8 object-contain" />
+                <div className="w-8 h-8 rounded-full border border-[#FAF7F2]/40 flex items-center justify-center font-serif text-base font-bold bg-[#2A2724] text-[#FAF7F2] shrink-0">
+                  {settings.logoLetter || 'A'}
+                </div>
                 <span className="font-serif text-2xl font-bold">{settings.studioName}</span>
               </div>
               <p className="text-xs text-[#A49E97] max-w-sm mx-auto sm:mx-0">

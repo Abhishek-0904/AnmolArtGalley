@@ -49,8 +49,8 @@ export default function DynamicUpiQr({
       {/* Top Header Card */}
       <div className="flex items-center justify-between bg-white px-3 py-1.5 rounded-xl border border-[#E8E5DF] text-xs">
         <div className="flex items-center gap-1.5 text-left">
-          <div className="w-6 h-6 rounded-full bg-sky-500 text-white font-bold text-[10px] flex items-center justify-center">
-            AG
+          <div className="w-6 h-6 rounded-full bg-[#1A1816] text-[#FAF7F2] font-serif font-bold text-xs flex items-center justify-center shrink-0">
+            A
           </div>
           <div>
             <p className="font-bold text-[#1A1816] text-[11px] leading-tight flex items-center gap-1">
